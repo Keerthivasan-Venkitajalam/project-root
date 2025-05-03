@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent-to-Agent (A2A) Protocol",
+  "description": "Schema for standardized agent-to-agent communication",
+  
+  "definitions": {
+    "MessageType": {
+      "type": "string",
+      "enum": ["REQUEST", "RESPONSE", "FEEDBACK", "UPDATE", "NOTIFY"]
+    },
+    
+    "Priority": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"]
+    },
+    
+    "AgentCapability": {
+      "type": "string",
+      "enum": ["AESTHETIC", "UX_FLOW", "ACCESSIBILITY", "PERSONA", "COORDINATION"]
+    },
+    
+    "DesignArtifact": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["LAYOUT", "COLOR_SCHEME", "COMPONENT", "FLOW", "INTERACTION"]
+        },
+        "content": { "type": "string" },
+        "metadata": { "type": "object" }
+      },
+      "required": ["type", "content"]
+    }
+  },
+  
+  "type": "object",
+  "properties": {
+    "message_id": {
+      "type": "string",
+      "description": "Unique identifier for the message"
+    },
+    "parent_id": {
+      "type": "string",
+      "description": "Reference to parent message in a conversation"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Trace ID for tracking a conversation across multiple agents"
+    },
+    "type": { "$ref": "#/definitions/MessageType" },
+    "sender": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentCapability" }
+        }
+      },
+      "required": ["id", "capabilities"]
+    },
+    "recipient": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentCapability" }
+        }
+      },
+      "required": ["id"]
+    },
+    "priority": { "$ref": "#/definitions/Priority" },
+    "timestamp": { "type": "integer" },
+    "content": {
+      "type": "object",
+      "properties": {
+        "task": { "type": "string" },
+        "artifacts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DesignArtifact" }
+        },
+        "context": { "type": "object" },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["task"]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "expires_at": { "type": "integer" },
+        "version": { "type": "string" },
+        "ttl": { "type": "integer" }
+      }
+    }
+  },
+  "required": ["message_id", "type", "sender", "recipient", "timestamp", "content"]
+}

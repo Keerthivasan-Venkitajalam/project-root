@@ -1,0 +1,164 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    build:
+      context: ./mcp-server
+    ports:
+      - "8080:8080"
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  solana-test:
+    image: solanalabs/solana:stable
+    command: solana-test-validator
+    ports:
+      - "8899:8899"
+      - "8900:8900"
+    networks:
+      - mcp-network
+    volumes:
+      - solana-test-data:/root/.local/share/solana/test-ledger
+    restart: unless-stopped
+
+  coordinator-agent:
+    build:
+      context: ./agents/coordinator
+    environment:
+      - MCP_SERVER_URL=ws://mcp-server:8080
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - SOLANA_RPC_URL=http://solana-test:8899
+    depends_on:
+      - mcp-server
+      - redis
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  aesthetic-agent:
+    build:
+      context: ./agents/aesthetic
+    environment:
+      - MCP_SERVER_URL=ws://mcp-server:8080
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - SOLANA_RPC_URL=http://solana-test:8899
+    depends_on:
+      - mcp-server
+      - redis
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  ux-flow-agent:
+    build:
+      context: ./agents/ux-flow
+    environment:
+      - MCP_SERVER_URL=ws://mcp-server:8080
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - SOLANA_RPC_URL=http://solana-test:8899
+    depends_on:
+      - mcp-server
+      - redis
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  accessibility-agent:
+    build:
+      context: ./agents/accessibility
+    environment:
+      - MCP_SERVER_URL=ws://mcp-server:8080
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - SOLANA_RPC_URL=http://solana-test:8899
+    depends_on:
+      - mcp-server
+      - redis
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  persona-agent:
+    build:
+      context: ./agents/persona
+    environment:
+      - MCP_SERVER_URL=ws://mcp-server:8080
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - SOLANA_RPC_URL=http://solana-test:8899
+    depends_on:
+      - mcp-server
+      - redis
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./ui
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_MCP_WS_URL=ws://localhost:8080
+    depends_on:
+      - mcp-server
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  monitoring:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - monitoring
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  solana-test-data:
+  prometheus-data:
+  grafana-data:

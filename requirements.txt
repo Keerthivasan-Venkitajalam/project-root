@@ -1,0 +1,25 @@
+# Multi-Agent Design System Dependencies
+
+# Core
+websockets==10.4
+openai==1.3.0
+redis==4.5.4
+prometheus-client==0.16.0
+pydantic==1.10.8
+
+# Solana blockchain integration (optional)
+solana==0.28.0
+
+# Testing
+pytest==7.3.1
+pytest-asyncio==0.21.0
+coverage==7.2.5
+
+# Deployment
+kubernetes==26.1.0
+boto3==1.26.129
+
+# Development
+black==23.3.0
+flake8==6.0.0
+mypy==1.2.0
